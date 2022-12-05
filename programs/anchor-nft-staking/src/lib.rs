@@ -9,7 +9,7 @@ pub use schema::*;
 pub mod errors;
 pub use errors::*;
 
-declare_id!("6DrV1wLkYvvypRfoHEPxUK4d1rrgPsbQoswRDRAPork2");
+declare_id!("GuXmg8ZbT4atRx6dwKvBVFrD3fgPCTJZk6hARxdH2sh7");
 
 #[program]
 pub mod anchor_nft_staking {
@@ -23,7 +23,7 @@ pub mod anchor_nft_staking {
         instructions::redeem::exec(ctx)
     }
 
-    // pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
-    //     Ok(())
-    // }
+    pub fn unstake(ctx: Context<Unstake>) -> Result<()> {
+        instructions::unstake::exec(ctx)
+    }
 }

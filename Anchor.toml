@@ -1,7 +1,7 @@
 [features]
 seeds = true
 [programs.localnet]
-anchor_nft_staking = "6DrV1wLkYvvypRfoHEPxUK4d1rrgPsbQoswRDRAPork2"
+anchor_nft_staking = "GuXmg8ZbT4atRx6dwKvBVFrD3fgPCTJZk6hARxdH2sh7"
 
 [registry]
 url = "https://anchor.projectserum.com"

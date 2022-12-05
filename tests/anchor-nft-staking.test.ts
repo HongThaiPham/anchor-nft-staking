@@ -61,4 +61,20 @@ describe("anchor-nft-staking", () => {
     expect(account.stakeState === "Unstaked");
     const tokenAccount = await getAccount(provider.connection, tokenAddress);
   });
+
+  it("Unstakes", async () => {
+    await program.methods
+      .unstake()
+      .accounts({
+        nftTokenAccount: nft.tokenAddress,
+        nftMint: nft.mintAddress,
+        nftEdition: nft.masterEditionAddress,
+        metadataProgram: METADATA_PROGRAM_ID,
+        stakeMint: mint,
+        userStakeAta: tokenAddress,
+      })
+      .rpc();
+    const account = await program.account.userStakeInfo.fetch(stakeStatePda);
+    expect(account.stakeState === "Unstaked");
+  });
 });
