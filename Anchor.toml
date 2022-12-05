@@ -1,14 +1,14 @@
 [features]
 seeds = true
 [programs.localnet]
-anchor_nft_staking = "B8d7ps7aCkQVnPzTn32NtxXYWMW6H1BWfuXk7QTWT39U"
+anchor_nft_staking = "6DrV1wLkYvvypRfoHEPxUK4d1rrgPsbQoswRDRAPork2"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/leo/.config/solana/id.json"
+wallet = "/Users/leophamdev/.config/solana/devnet.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"

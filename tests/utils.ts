@@ -13,7 +13,7 @@ export const setupNft = async (program, payer) => {
 
   const nft = await metaplex.nfts().create({
     uri: "",
-    name: "Leo nft",
+    name: "Test nft",
     sellerFeeBasisPoints: 0,
   });
 
