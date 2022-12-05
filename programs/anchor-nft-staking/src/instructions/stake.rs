@@ -38,6 +38,10 @@ pub struct Stake<'info> {
 }
 
 pub fn exec(ctx: Context<Stake>) -> Result<()> {
+    require!(
+        ctx.accounts.stake_state.stake_state == StakeState::Unstaked,
+        StakeError::AlreadyStaked
+    );
     let clock = Clock::get().unwrap();
     msg!("Approving delegate");
 
@@ -78,9 +82,5 @@ pub fn exec(ctx: Context<Stake>) -> Result<()> {
     ctx.accounts.stake_state.last_stake_redeem = clock.unix_timestamp;
     ctx.accounts.stake_state.is_initialized = true;
 
-    require!(
-        ctx.accounts.stake_state.stake_state == StakeState::Unstaked,
-        StakeError::AlreadyStaked
-    );
     Ok(())
 }

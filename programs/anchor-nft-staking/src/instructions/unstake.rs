@@ -1,11 +1,11 @@
 use anchor_lang::{prelude::*, solana_program::program::invoke_signed};
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{self, Mint, Revoke, Token, TokenAccount},
+    token::{self, Mint, MintTo, Revoke, Token, TokenAccount},
 };
 use mpl_token_metadata::{instruction::thaw_delegated_account, ID as MetadataTokenId};
 
-use crate::{Metadata, StakeState, UserStakeInfo};
+use crate::{Metadata, StakeError, StakeState, UserStakeInfo};
 
 #[derive(Accounts)]
 pub struct Unstake<'info> {
@@ -51,6 +51,16 @@ pub struct Unstake<'info> {
 }
 
 pub fn exec(ctx: Context<Unstake>) -> Result<()> {
+    require!(
+        ctx.accounts.stake_state.is_initialized,
+        StakeError::UninitializedAccount
+    );
+
+    require!(
+        ctx.accounts.stake_state.stake_state == StakeState::Staked,
+        StakeError::InvalidStakeState
+    );
+
     msg!("Thawing token account");
     let authority_bump = *ctx.bumps.get("program_authority").unwrap();
     invoke_signed(
@@ -81,6 +91,45 @@ pub fn exec(ctx: Context<Unstake>) -> Result<()> {
 
     let cpi_revoke_ctx = CpiContext::new(cpi_revoke_program, cpi_revoke_accounts);
     token::revoke(cpi_revoke_ctx)?;
+
+    let clock = Clock::get()?;
+
+    msg!(
+        "Stake last redeem: {:?}",
+        ctx.accounts.stake_state.last_stake_redeem
+    );
+
+    msg!("Current time: {:?}", clock.unix_timestamp);
+    let unix_time = clock.unix_timestamp - ctx.accounts.stake_state.last_stake_redeem;
+    msg!("Seconds since last redeem: {}", unix_time);
+    // Swap the next two lines out between prod/testing
+    // let redeem_amount = (10000000000 * i64::pow(10, 2) * unix_time) / (24 * 60 * 60);
+    let redeem_amount = (10 * i64::pow(10, 2) * unix_time) / (24 * 60 * 60);
+    msg!("Elligible redeem amount: {}", redeem_amount);
+
+    msg!("Minting staking rewards");
+    token::mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.stake_mint.to_account_info(),
+                to: ctx.accounts.user_stake_ata.to_account_info(),
+                authority: ctx.accounts.stake_authority.to_account_info(),
+            },
+            &[&[
+                b"mint".as_ref(),
+                &[*ctx.bumps.get("stake_authority").unwrap()],
+            ]],
+        ),
+        redeem_amount.try_into().unwrap(),
+    )?;
+
+    ctx.accounts.stake_state.last_stake_redeem = clock.unix_timestamp;
+    ctx.accounts.stake_state.total_earned += redeem_amount as u64;
+    msg!(
+        "Updated last stake redeem time: {:?}",
+        ctx.accounts.stake_state.last_stake_redeem
+    );
 
     ctx.accounts.stake_state.stake_state = StakeState::Unstaked;
     Ok(())

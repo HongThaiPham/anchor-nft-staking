@@ -4,13 +4,13 @@ import { getAccount } from "@solana/spl-token";
 import { expect } from "chai";
 import { AnchorNftStaking } from "../target/types/anchor_nft_staking";
 import { setupNft } from "./utils";
+import { PROGRAM_ID as METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 
 describe("anchor-nft-staking", () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const wallet = anchor.workspace.AnchorNftStaking.provider.wallet;
-  const METADATA_PROGRAM_ID = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
   const program = anchor.workspace
     .AnchorNftStaking as Program<AnchorNftStaking>;
 
@@ -45,7 +45,8 @@ describe("anchor-nft-staking", () => {
       .rpc();
 
     const account = await program.account.userStakeInfo.fetch(stakeStatePda);
-    expect(account.stakeState === "Staked");
+    expect(account.stakeState).to.equal("Staked");
+    expect(Number(account.totalEarned) === 0);
   });
 
   it("Redeems", async () => {
@@ -58,8 +59,9 @@ describe("anchor-nft-staking", () => {
       })
       .rpc();
     const account = await program.account.userStakeInfo.fetch(stakeStatePda);
-    expect(account.stakeState === "Unstaked");
+    expect(account.stakeState).to.equal("Staked");
     const tokenAccount = await getAccount(provider.connection, tokenAddress);
+    expect(Number(tokenAccount.amount) > 0);
   });
 
   it("Unstakes", async () => {
@@ -75,6 +77,6 @@ describe("anchor-nft-staking", () => {
       })
       .rpc();
     const account = await program.account.userStakeInfo.fetch(stakeStatePda);
-    expect(account.stakeState === "Unstaked");
+    expect(account.stakeState).to.equal("Unstake");
   });
 });
